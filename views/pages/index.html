@@ -1,0 +1,7 @@
+<!-- templates/pages/home.html -->
+{{define "title"}} Home Page {{end}} {{define "content"}}
+<h2>Welcome!</h2>
+<p>This is the home page content.</p>
+{{end}}
+<!-- Calls the base layout and passes the data context (.) -->
+{{template "layouts/default.html" .}}

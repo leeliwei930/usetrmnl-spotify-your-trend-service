@@ -1,0 +1,21 @@
+<!-- templates/layout/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>{{block "title" .}}Default Title{{end}}</title>
+</head>
+
+<body>
+	<header>
+	</header>
+	<main>
+		<!-- This is where the specific page content will be injected --> {{block "content" .}} {{end}}
+	</main>
+	<footer>
+		<p>&copy; 2025</p>
+	</footer>
+</body>
+
+</html>
