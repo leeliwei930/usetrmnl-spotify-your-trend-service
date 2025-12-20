@@ -1,0 +1,243 @@
+<!-- templates/pages/spotify/callback.html -->
+{{define "title"}}Spotify Account Linked{{end}} {{define "content"}}
+<div
+  style="
+    max-width: 600px;
+    margin: 50px auto;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+      Ubuntu, Cantarell, sans-serif;
+  "
+>
+  {{if .Success}}
+  <!-- Success State -->
+  <div
+    style="
+      background: linear-gradient(135deg, #1db954 0%, #1ed760 100%);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(29, 185, 84, 0.3);
+    "
+  >
+    <h1
+      style="
+        color: white;
+        font-size: 32px;
+        margin-bottom: 16px;
+        font-weight: 600;
+      "
+    >
+      ✅ Successfully Connected!
+    </h1>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        margin-bottom: 32px;
+        line-height: 1.6;
+      "
+    >
+      Your Spotify account has been linked. Below is your refresh token.
+    </p>
+
+    <div
+      style="
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      "
+    >
+      <label
+        style="
+          display: block;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 14px;
+          margin-bottom: 12px;
+          font-weight: 500;
+          text-align: left;
+        "
+      >
+        Refresh Token:
+      </label>
+      <textarea
+        id="refreshToken"
+        readonly
+        style="
+          width: 100%;
+          background: rgba(0, 0, 0, 0.2);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 12px;
+          font-family: 'Monaco', 'Courier New', monospace;
+          font-size: 12px;
+          resize: none;
+          min-height: 100px;
+          box-sizing: border-box;
+        "
+      >
+{{.RefreshToken}}</textarea
+      >
+
+      <button
+        id="copyButton"
+        onclick="copyToClipboard()"
+        style="
+          margin-top: 16px;
+          background: white;
+          color: #1db954;
+          border: none;
+          padding: 12px 32px;
+          border-radius: 50px;
+          font-weight: 600;
+          font-size: 16px;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        "
+        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)';"
+        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)';"
+      >
+        📋 Copy to Clipboard
+      </button>
+    </div>
+
+    <div
+      style="
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      "
+    >
+      <p style="color: rgba(255, 255, 255, 0.7); font-size: 14px; margin: 0">
+        Save this refresh token securely. You'll need it to access your Spotify
+        data.
+      </p>
+    </div>
+  </div>
+
+  {{else}}
+  <!-- Error State -->
+  <div
+    style="
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+    "
+  >
+    <h1
+      style="
+        color: white;
+        font-size: 32px;
+        margin-bottom: 16px;
+        font-weight: 600;
+      "
+    >
+      ❌ Connection Failed
+    </h1>
+    <p
+      style="
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        margin-bottom: 32px;
+        line-height: 1.6;
+      "
+    >
+      {{.ErrorMessage}}
+    </p>
+
+    <a
+      href="/usetrmnl/spotify/authorize"
+      style="
+        display: inline-block;
+        background: white;
+        color: #ff5252;
+        padding: 16px 48px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 18px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      "
+      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)';"
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)';"
+    >
+      🔄 Try Again
+    </a>
+  </div>
+  {{end}}
+</div>
+
+<script>
+  function copyToClipboard() {
+    const tokenTextarea = document.getElementById("refreshToken");
+    const button = document.getElementById("copyButton");
+
+    // Try using the modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(tokenTextarea.value)
+        .then(() => {
+          // Success feedback
+          const originalText = button.innerHTML;
+          const originalBg = button.style.background;
+
+          button.innerHTML = "✓ Copied!";
+          button.style.background = "#1ed760";
+          button.style.color = "white";
+
+          // Reset after 2 seconds
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.style.background = originalBg;
+            button.style.color = "#1db954";
+          }, 2000);
+        })
+        .catch((err) => {
+          console.error("Failed to copy: ", err);
+          fallbackCopy();
+        });
+    } else {
+      // Fallback for older browsers
+      fallbackCopy();
+    }
+  }
+
+  function fallbackCopy() {
+    const tokenTextarea = document.getElementById("refreshToken");
+    const button = document.getElementById("copyButton");
+
+    try {
+      tokenTextarea.select();
+      tokenTextarea.setSelectionRange(0, 99999); // For mobile devices
+
+      document.execCommand("copy");
+
+      // Success feedback
+      const originalText = button.innerHTML;
+      const originalBg = button.style.background;
+
+      button.innerHTML = "✓ Copied!";
+      button.style.background = "#1ed760";
+      button.style.color = "white";
+
+      // Reset after 2 seconds
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.style.background = originalBg;
+        button.style.color = "#1db954";
+      }, 2000);
+    } catch (err) {
+      console.error("Fallback copy failed: ", err);
+      alert("Please manually copy the token");
+    }
+  }
+</script>
+
+{{end}}
+
+<!-- Calls the base layout and passes the data context (.) -->
+{{template "layouts/default.html" .}}

@@ -15,4 +15,7 @@ func RegisterWebRoutes(e *echo.Group) {
 	// Spotify authorization route
 	e.GET("/usetrmnl/spotify/authorize", handlers.SpotifyAuthorizePage)
 
+	// Spotify callback route
+	e.GET("/usetrmnl/spotify/callback", handlers.SpotifyCallbackPage)
+
 }
