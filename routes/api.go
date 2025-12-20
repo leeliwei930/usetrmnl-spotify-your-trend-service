@@ -12,6 +12,10 @@ func RegisterApiRoutes(e *echo.Group) {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 	})
 
+	// Spotify API endpoints for NuxtJS frontend
+	e.GET("/usetrmnl/spotify/authorize", handlers.SpotifyAuthorizeAPI)
+	e.POST("/usetrmnl/spotify/callback", handlers.SpotifyCallbackAPI)
+
 	// Spotify trends endpoint
 	e.POST("/usetrmnl/spotify/trends", handlers.GetTrendsHandler)
 }

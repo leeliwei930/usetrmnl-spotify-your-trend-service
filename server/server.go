@@ -6,12 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/leeliwei930/usetrmnl_spotify_service/routes"
+	"github.com/spf13/viper"
 )
 
 type StartParams struct {
@@ -24,6 +26,33 @@ func Start(params StartParams) {
 
 	e.Logger.SetLevel(log.ERROR)
 	e.Use(middleware.Logger())
+
+	// CORS middleware for NuxtJS frontend
+	// Read allowed origins from environment variable (comma-separated)
+	allowOriginsStr := viper.GetString("CORS_ALLOW_ORIGINS")
+	if allowOriginsStr == "" {
+		allowOriginsStr = "http://localhost:3000,http://localhost:3001"
+	}
+	allowOrigins := strings.Split(allowOriginsStr, ",")
+	// Trim whitespace from each origin
+	for i := range allowOrigins {
+		allowOrigins[i] = strings.TrimSpace(allowOrigins[i])
+	}
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: allowOrigins,
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+			"X-SPOTIFY-CLIENT-ID",
+			"X-SPOTIFY-CLIENT-SECRET",
+			"X-SPOTIFY-REFRESH-TOKEN",
+		},
+		AllowCredentials: true,
+	}))
 
 	e.Renderer = NewWebTemplate()
 
