@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/leeliwei930/usetrmnl_spotify_service/config"
 	"github.com/leeliwei930/usetrmnl_spotify_service/routes"
 	"github.com/spf13/viper"
 )
@@ -64,18 +65,28 @@ func Start(params StartParams) {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	// Configure server timeouts
+	cfg := config.Get()
+	s := &http.Server{
+		Addr:         ":" + strconv.Itoa(params.Port),
+		Handler:      e,
+		ReadTimeout:  time.Duration(cfg.ServerReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.ServerWriteTimeout) * time.Second,
+	}
+
 	// Start server
 	go func() {
-		if err := e.Start(":" + strconv.Itoa(params.Port)); err != nil && err != http.ErrServerClosed {
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()
 
 	// Wait for interrupt signal to gracefully shut down the server with a timeout of 10 seconds.
 	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
+	if err := s.Shutdown(shutdownCtx); err != nil {
 		e.Logger.Fatal(err)
 	}
 }

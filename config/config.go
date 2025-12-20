@@ -19,6 +19,15 @@ type Config struct {
 	// Server Configuration
 	ServerPort int
 	ServerHost string
+
+	// Agent Service Configuration
+	AgentBaseURL string
+
+	// Timeout Configuration (in seconds)
+	AgentClientTimeout  int
+	AgentRequestTimeout int
+	ServerReadTimeout   int
+	ServerWriteTimeout  int
 }
 
 var instance *Config
@@ -38,6 +47,12 @@ func Init() error {
 	viper.SetDefault("SPOTIFY_REDIRECT_URI", "http://localhost:8080/usetrmnl/spotify/callback")
 	viper.SetDefault("SERVER_PORT", 8080)
 	viper.SetDefault("SERVER_HOST", "localhost")
+	viper.SetDefault("AGENT_BASE_URL", "http://localhost:8000")
+	// Timeout defaults
+	viper.SetDefault("AGENT_CLIENT_TIMEOUT", 30)
+	viper.SetDefault("AGENT_REQUEST_TIMEOUT", 25)
+	viper.SetDefault("SERVER_READ_TIMEOUT", 30)
+	viper.SetDefault("SERVER_WRITE_TIMEOUT", 30)
 
 	// Load configuration into struct
 	instance = &Config{
@@ -46,6 +61,12 @@ func Init() error {
 		SpotifyRedirectURI:  viper.GetString("SPOTIFY_REDIRECT_URI"),
 		ServerPort:          viper.GetInt("SERVER_PORT"),
 		ServerHost:          viper.GetString("SERVER_HOST"),
+		AgentBaseURL:        viper.GetString("AGENT_BASE_URL"),
+		// Timeout configuration
+		AgentClientTimeout:  viper.GetInt("AGENT_CLIENT_TIMEOUT"),
+		AgentRequestTimeout: viper.GetInt("AGENT_REQUEST_TIMEOUT"),
+		ServerReadTimeout:   viper.GetInt("SERVER_READ_TIMEOUT"),
+		ServerWriteTimeout:  viper.GetInt("SERVER_WRITE_TIMEOUT"),
 	}
 
 	// Validate required configuration

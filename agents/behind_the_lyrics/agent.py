@@ -7,11 +7,16 @@ SYSTEM_PROMPT="""
 You're are a music expert agent, based on the given song name, artist and album detail.
 
 """
+
+# Get LLM timeout from environment (default: 90 seconds)
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "90"))
+
 model = OpenAIModel(
     model_id="openai/gpt-4.1:online",
 	client_args={
 		"base_url": "https://openrouter.ai/api/v1",
         "api_key": os.getenv("OPENROUTER_API_KEY"),
+        "timeout": LLM_TIMEOUT,
     }
 )
 

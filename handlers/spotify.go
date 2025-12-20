@@ -230,10 +230,11 @@ type TrendsData struct {
 }
 
 type BehindTheLyrics struct {
-	Summary string      `json:"summary"`
-	Title   string      `json:"title"`
-	Artist  string      `json:"artist"`
-	Album   BehindAlbum `json:"album"`
+	SummaryEn string      `json:"summaryEn"`
+	SummaryZh string      `json:"summaryZh"`
+	Title     string      `json:"title"`
+	Artist    string      `json:"artist"`
+	Album     BehindAlbum `json:"album"`
 }
 
 type BehindAlbum struct {
@@ -268,73 +269,50 @@ func GetTrendsHandler(c echo.Context) error {
 		)
 	}
 
-	// Refresh access token
-	tokenResp, err := services.RefreshAccessToken(services.RefreshTokenParams{
-		RefreshToken: refreshToken,
+	// Build service parameters
+	params := services.TrendServiceParams{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-	})
+		RefreshToken: refreshToken,
+	}
+
+	// Fetch trends using the service layer
+	trendsData, err := services.GetUserTrends(params)
 	if err != nil {
-		c.Logger().Error("Token refresh failed: ", err)
+		c.Logger().Error("Failed to get user trends: ", err)
 		return echo.NewHTTPError(
-			http.StatusUnauthorized,
-			"Failed to refresh access token: "+err.Error(),
+			http.StatusInternalServerError,
+			"Failed to fetch user trends: "+err.Error(),
 		)
 	}
 
-	// Fetch user's top tracks (default: 20 tracks, medium term)
-	topTracks, err := services.GetUserTopTracks(tokenResp.AccessToken, 20, "medium_term")
-	if err != nil {
-		c.Logger().Error("Failed to fetch top tracks: ", err)
-		return echo.NewHTTPError(
-			http.StatusBadGateway,
-			"Failed to fetch top tracks from Spotify: "+err.Error(),
-		)
-	}
-
-	// Transform response to custom format
-	tracks := make([]TrendTrack, 0, len(topTracks.Items))
-	for i, track := range topTracks.Items {
-		// Get the first artist name (tracks can have multiple artists)
-		artistName := ""
-		if len(track.Artists) > 0 {
-			artistName = track.Artists[0].Name
-		}
-
-		// Get album cover URL (prefer the largest image)
-		coverURL := ""
-		if len(track.Album.Images) > 0 {
-			coverURL = track.Album.Images[0].URL
-		}
-
-		tracks = append(tracks, TrendTrack{
-			Rank:   i + 1, // Rank starts from 1
-			Title:  track.Name,
-			Artist: artistName,
+	// Convert service data to handler response types
+	tracks := make([]TrendTrack, len(trendsData.Tracks))
+	for i, track := range trendsData.Tracks {
+		tracks[i] = TrendTrack{
+			Rank:   track.Rank,
+			Title:  track.Title,
+			Artist: track.Artist,
 			Album: TrendAlbum{
 				Name:     track.Album.Name,
-				CoverUrl: coverURL,
-			},
-		})
-	}
-
-	// Populate behindTheLyrics with data from the top-ranked track
-	var behindLyrics BehindTheLyrics
-	if len(tracks) > 0 {
-		// Use the first (top-ranked) track
-		topTrack := tracks[0]
-		behindLyrics = BehindTheLyrics{
-			Summary: "", // TODO: Replace with actual summary source (LLM, API, etc.)
-			Title:   topTrack.Title,
-			Artist:  topTrack.Artist,
-			Album: BehindAlbum{
-				Name:     topTrack.Album.Name,
-				CoverUrl: topTrack.Album.CoverUrl,
+				CoverUrl: track.Album.CoverURL,
 			},
 		}
 	}
 
-	// Create response with structured behindTheLyrics data
+	// Convert behind lyrics data
+	behindLyrics := BehindTheLyrics{
+		SummaryEn: trendsData.BehindTheLyrics.SummaryEn,
+		SummaryZh: trendsData.BehindTheLyrics.SummaryZh,
+		Title:     trendsData.BehindTheLyrics.Title,
+		Artist:    trendsData.BehindTheLyrics.Artist,
+		Album: BehindAlbum{
+			Name:     trendsData.BehindTheLyrics.Album.Name,
+			CoverUrl: trendsData.BehindTheLyrics.Album.CoverURL,
+		},
+	}
+
+	// Create response
 	response := TrendsResponse{
 		Trends: TrendsData{
 			Tracks:          tracks,
