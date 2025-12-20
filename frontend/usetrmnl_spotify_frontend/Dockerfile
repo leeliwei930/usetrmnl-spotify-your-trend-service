@@ -26,13 +26,16 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set working directory
 WORKDIR /app
 
+# Set to production environment for build optimizations
+ENV NODE_ENV=production
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy application code
 COPY . .
 
-# Build the application
+# Build the application for production
 RUN pnpm build
 
 # ========================================
@@ -40,19 +43,14 @@ RUN pnpm build
 # ========================================
 FROM node:22-alpine AS runner
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
 # Set working directory
 WORKDIR /app
 
 # Set to production environment
 ENV NODE_ENV=production
 
-# Copy necessary files from builder
+# Copy only the standalone production build from builder
 COPY --from=builder /app/.output ./.output
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
 # Expose port
 EXPOSE 3000

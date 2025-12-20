@@ -5,8 +5,9 @@ services:
   # Python Agents Service
   # ========================================
   agents:
+    image: usetrmnl-spotify-lyrics-agents
     build:
-      context: ../agents
+      context: ./agents
       dockerfile: Dockerfile
     container_name: usetrmnl-agents
     ports:
@@ -35,8 +36,9 @@ services:
   # Go Backend Service
   # ========================================
   backend:
+    image: usetrmnl-spotify-plugin-backend
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     container_name: usetrmnl-backend
     ports:
@@ -53,8 +55,9 @@ services:
   # NuxtJS Frontend Service
   # ========================================
   frontend:
+    image: usetrmnl-spotify-plugin-frontend
     build:
-      context: ../frontend/usetrmnl_spotify_frontend
+      context: ./frontend/usetrmnl_spotify_frontend
       dockerfile: Dockerfile
     container_name: usetrmnl-frontend
     ports:
