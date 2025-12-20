@@ -31,8 +31,8 @@ class LyricSummary(BaseModel):
 	artist: str = Field(description="The song's artist")
 	album: str = Field(description="The song's album")
 	cover: str = Field(description="The song's cover url")
-	summary_en: str = Field(description="A summarised version of the song's lyrics meaning, in 80 words")
-	summary_zh: str = Field(description="A summarised version of the song's lyrics meaning in mandarin, in 80 words")
+	summary_en: str = Field(description="A summarised version of the song's lyrics meaning, in 32 words")
+	summary_zh: str = Field(description="A summarised version of the song's lyrics meaning in mandarin, in 32 words")
 
 
 behind_the_lyrics_agent = Agent(

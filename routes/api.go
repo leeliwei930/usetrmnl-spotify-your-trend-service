@@ -18,4 +18,7 @@ func RegisterApiRoutes(e *echo.Group) {
 
 	// Spotify trends endpoint
 	e.POST("/usetrmnl/spotify/trends", handlers.GetTrendsHandler)
+
+	// Spotify recently played endpoint
+	e.POST("/usetrmnl/spotify/recent-played", handlers.GetRecentPlayedHandler)
 }

@@ -22,11 +22,28 @@ type StartParams struct {
 }
 
 func Start(params StartParams) {
+	// Configure server timeouts
+	cfg := config.Get()
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
-
-	e.Logger.SetLevel(log.ERROR)
-	e.Use(middleware.Logger())
+	e.Use(middleware.Gzip())
+	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout: time.Duration(cfg.ServerTimeout) * time.Second,
+	}))
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogStatus:   true,
+		LogURI:      true,
+		LogError:    true,
+		LogMethod:   true,
+		LogLatency:  true,
+		LogRemoteIP: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			e.Logger.Infof("%s %s [%d] %v", v.Method, v.URI, v.Status, v.Latency)
+			return nil
+		},
+	}))
+	e.Logger.SetLevel(log.INFO)
+	e.Use(middleware.Recover())
 
 	// CORS middleware for NuxtJS frontend
 	// Read allowed origins from environment variable (comma-separated)
@@ -39,7 +56,7 @@ func Start(params StartParams) {
 	for i := range allowOrigins {
 		allowOrigins[i] = strings.TrimSpace(allowOrigins[i])
 	}
-
+	e.Static("/", "./public")
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowOrigins,
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
@@ -55,8 +72,6 @@ func Start(params StartParams) {
 		AllowCredentials: true,
 	}))
 
-	e.Renderer = NewWebTemplate()
-
 	apiGroup := e.Group("/api")
 	routes.RegisterApiRoutes(apiGroup)
 
@@ -66,18 +81,10 @@ func Start(params StartParams) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// Configure server timeouts
-	cfg := config.Get()
-	s := &http.Server{
-		Addr:         ":" + strconv.Itoa(params.Port),
-		Handler:      e,
-		ReadTimeout:  time.Duration(cfg.ServerReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.ServerWriteTimeout) * time.Second,
-	}
-
 	// Start server
+	e.Logger.Infof("Starting server on port %d", params.Port)
 	go func() {
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := e.Start(":" + strconv.Itoa(params.Port)); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()
@@ -86,7 +93,7 @@ func Start(params StartParams) {
 	<-ctx.Done()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := s.Shutdown(shutdownCtx); err != nil {
+	if err := e.Shutdown(shutdownCtx); err != nil {
 		e.Logger.Fatal(err)
 	}
 }

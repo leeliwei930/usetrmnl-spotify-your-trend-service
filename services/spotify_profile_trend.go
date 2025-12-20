@@ -164,13 +164,75 @@ func GetUserTrends(params TrendServiceParams) (*TrendsData, error) {
 	}
 
 	// Fetch user's top tracks (20 tracks, medium term)
-	topTracksResp, err := GetUserTopTracks(tokenResp.AccessToken, 20, "medium_term")
+	topTracksResp, err := GetUserTopTracks(tokenResp.AccessToken, 5, "medium_term")
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch top tracks: %w", err)
 	}
 
 	// Transform tracks to trend data
 	trendTracks := TransformTracksToTrendData(topTracksResp.Items)
+
+	// Select a random track for behind the lyrics
+	randomTrack := SelectRandomTrack(trendTracks)
+
+	// Initialize agent client
+	agentClient := NewAgentClient()
+
+	// Build behind lyrics data with agent summaries
+	behindLyrics, err := BuildBehindLyricsData(randomTrack, agentClient)
+	if err != nil {
+		// Log the error but don't fail the entire request
+		// Return empty summaries instead
+		if randomTrack != nil {
+			behindLyrics = BehindLyricsData{
+				SummaryEn: "",
+				SummaryZh: "",
+				Title:     randomTrack.Title,
+				Artist:    randomTrack.Artist,
+				Album: BehindAlbumData{
+					Name:     randomTrack.Album.Name,
+					CoverURL: randomTrack.Album.CoverURL,
+				},
+			}
+		}
+	}
+
+	// Build and return the final trends data
+	trendsData := &TrendsData{
+		Tracks:          trendTracks,
+		BehindTheLyrics: behindLyrics,
+	}
+
+	return trendsData, nil
+}
+
+// GetUserRecentPlayed orchestrates the entire process of fetching recently played tracks
+func GetUserRecentPlayed(params TrendServiceParams) (*TrendsData, error) {
+	// Validate parameters
+	if err := ValidateTrendRequestParams(params); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	// Refresh access token
+	tokenResp, err := FetchAndRefreshToken(params)
+	if err != nil {
+		return nil, fmt.Errorf("token refresh failed: %w", err)
+	}
+
+	// Fetch user's recently played tracks (limit to 5)
+	recentlyPlayedResp, err := GetRecentlyPlayed(tokenResp.AccessToken, 5)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch recently played tracks: %w", err)
+	}
+
+	// Extract SpotifyTrack from SpotifyPlayHistory
+	tracks := make([]SpotifyTrack, len(recentlyPlayedResp.Items))
+	for i, item := range recentlyPlayedResp.Items {
+		tracks[i] = item.Track
+	}
+
+	// Transform tracks to trend data
+	trendTracks := TransformTracksToTrendData(tracks)
 
 	// Select a random track for behind the lyrics
 	randomTrack := SelectRandomTrack(trendTracks)

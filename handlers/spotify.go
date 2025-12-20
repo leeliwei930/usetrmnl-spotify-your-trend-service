@@ -23,6 +23,7 @@ func SpotifyAuthorizePage(c echo.Context) error {
 		"user-read-private",
 		"user-read-email",
 		"user-top-read",
+		"user-read-recently-played",
 	}
 
 	// Generate random state for CSRF protection
@@ -130,6 +131,7 @@ func SpotifyAuthorizeAPI(c echo.Context) error {
 		"user-read-private",
 		"user-read-email",
 		"user-top-read",
+		"user-read-recently-played",
 	}
 
 	// Generate random state for CSRF protection
@@ -309,6 +311,75 @@ func GetTrendsHandler(c echo.Context) error {
 		Album: BehindAlbum{
 			Name:     trendsData.BehindTheLyrics.Album.Name,
 			CoverUrl: trendsData.BehindTheLyrics.Album.CoverURL,
+		},
+	}
+
+	// Create response
+	response := TrendsResponse{
+		Trends: TrendsData{
+			Tracks:          tracks,
+			BehindTheLyrics: behindLyrics,
+		},
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+// GetRecentPlayedHandler handles requests to fetch user's recently played Spotify tracks
+func GetRecentPlayedHandler(c echo.Context) error {
+	// Extract custom headers
+	clientID := c.Request().Header.Get("X-SPOTIFY-CLIENT-ID")
+	clientSecret := c.Request().Header.Get("X-SPOTIFY-CLIENT-SECRET")
+	refreshToken := c.Request().Header.Get("X-SPOTIFY-REFRESH-TOKEN")
+
+	// Validate required headers
+	if clientID == "" || clientSecret == "" || refreshToken == "" {
+		return echo.NewHTTPError(
+			http.StatusBadRequest,
+			"Missing required headers: X-SPOTIFY-CLIENT-ID, X-SPOTIFY-CLIENT-SECRET, X-SPOTIFY-REFRESH-TOKEN",
+		)
+	}
+
+	// Build service parameters
+	params := services.TrendServiceParams{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RefreshToken: refreshToken,
+	}
+
+	// Fetch recently played using the service layer
+	recentPlayedData, err := services.GetUserRecentPlayed(params)
+	if err != nil {
+		c.Logger().Error("Failed to get recently played tracks: ", err)
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"Failed to fetch recently played tracks: "+err.Error(),
+		)
+	}
+
+	// Convert service data to handler response types
+	tracks := make([]TrendTrack, len(recentPlayedData.Tracks))
+	for i, track := range recentPlayedData.Tracks {
+		tracks[i] = TrendTrack{
+			Rank:   track.Rank,
+			Title:  track.Title,
+			Artist: track.Artist,
+			Album: TrendAlbum{
+				Name:     track.Album.Name,
+				CoverUrl: track.Album.CoverURL,
+			},
+		}
+	}
+
+	// Convert behind lyrics data
+	behindLyrics := BehindTheLyrics{
+		SummaryEn: recentPlayedData.BehindTheLyrics.SummaryEn,
+		SummaryZh: recentPlayedData.BehindTheLyrics.SummaryZh,
+		Title:     recentPlayedData.BehindTheLyrics.Title,
+		Artist:    recentPlayedData.BehindTheLyrics.Artist,
+		Album: BehindAlbum{
+			Name:     recentPlayedData.BehindTheLyrics.Album.Name,
+			CoverUrl: recentPlayedData.BehindTheLyrics.Album.CoverURL,
 		},
 	}
 

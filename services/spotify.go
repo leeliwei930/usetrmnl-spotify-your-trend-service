@@ -272,3 +272,66 @@ func GetUserTopTracks(accessToken string, limit int, timeRange string) (*Spotify
 
 	return &topTracksResp, nil
 }
+
+// SpotifyPlayHistory represents a play history item from Spotify API
+type SpotifyPlayHistory struct {
+	Track    SpotifyTrack `json:"track"`
+	PlayedAt string       `json:"played_at"`
+}
+
+// SpotifyRecentlyPlayedResponse represents the response from Spotify's recently played endpoint
+type SpotifyRecentlyPlayedResponse struct {
+	Items []SpotifyPlayHistory `json:"items"`
+	Limit int                  `json:"limit"`
+}
+
+// GetRecentlyPlayed fetches the user's recently played tracks from Spotify
+func GetRecentlyPlayed(accessToken string, limit int) (*SpotifyRecentlyPlayedResponse, error) {
+	baseURL := "https://api.spotify.com/v1/me/player/recently-played"
+
+	// Set default values
+	if limit <= 0 {
+		limit = 20
+	}
+
+	// Build URL with query parameters
+	queryParams := url.Values{}
+	queryParams.Set("limit", fmt.Sprintf("%d", limit))
+	fullURL := fmt.Sprintf("%s?%s", baseURL, queryParams.Encode())
+
+	// Create request
+	req, err := http.NewRequest("GET", fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set authorization header
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	// Execute request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check for non-200 status codes
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("spotify API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var recentlyPlayedResp SpotifyRecentlyPlayedResponse
+	if err := json.Unmarshal(body, &recentlyPlayedResp); err != nil {
+		return nil, fmt.Errorf("failed to parse recently played response: %w", err)
+	}
+
+	return &recentlyPlayedResp, nil
+}

@@ -26,8 +26,7 @@ type Config struct {
 	// Timeout Configuration (in seconds)
 	AgentClientTimeout  int
 	AgentRequestTimeout int
-	ServerReadTimeout   int
-	ServerWriteTimeout  int
+	ServerTimeout       int
 }
 
 var instance *Config
@@ -65,8 +64,7 @@ func Init() error {
 		// Timeout configuration
 		AgentClientTimeout:  viper.GetInt("AGENT_CLIENT_TIMEOUT"),
 		AgentRequestTimeout: viper.GetInt("AGENT_REQUEST_TIMEOUT"),
-		ServerReadTimeout:   viper.GetInt("SERVER_READ_TIMEOUT"),
-		ServerWriteTimeout:  viper.GetInt("SERVER_WRITE_TIMEOUT"),
+		ServerTimeout:       viper.GetInt("SERVER_TIMEOUT"),
 	}
 
 	// Validate required configuration
