@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  # ========================================
+  # Python Agents Service
+  # ========================================
+  agents:
+    build:
+      context: ../agents
+      dockerfile: Dockerfile
+    container_name: usetrmnl-agents
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.agents
+    networks:
+      - usetrmnl-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8000/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ========================================
+  # Go Backend Service
+  # ========================================
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: usetrmnl-backend
+    ports:
+      - "8009:8080"
+    env_file:
+      - .env.backend
+    depends_on:
+      - agents
+    networks:
+      - usetrmnl-network
+    restart: unless-stopped
+
+  # ========================================
+  # NuxtJS Frontend Service
+  # ========================================
+  frontend:
+    build:
+      context: ../frontend/usetrmnl_spotify_frontend
+      dockerfile: Dockerfile
+    container_name: usetrmnl-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.frontend
+    depends_on:
+      - backend
+    networks:
+      - usetrmnl-network
+    restart: unless-stopped
+
+# ========================================
+# Networks
+# ========================================
+networks:
+  usetrmnl-network:
+    driver: bridge

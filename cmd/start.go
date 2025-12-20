@@ -24,12 +24,14 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		serverPort := cmd.Flag("port").Value.String()
+		serverHost := cmd.Flag("host").Value.String()
 		serverPortInt, err := strconv.Atoi(serverPort)
 		if err != nil {
 			log.Fatal("Invalid port number")
 		}
 		server.Start(server.StartParams{
 			Port: serverPortInt,
+			Host: serverHost,
 		})
 	},
 }
@@ -43,6 +45,7 @@ func init() {
 	// and all subcommands, e.g.:
 	// startCmd.PersistentFlags().String("foo", "", "A help for foo")
 	startCmd.Flags().IntP("port", "p", 1323, "Port to run the server on")
+	startCmd.Flags().StringP("host", "H", "127.0.0.1", "Host to run the server on")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

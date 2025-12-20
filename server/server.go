@@ -2,10 +2,10 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +19,7 @@ import (
 
 type StartParams struct {
 	Port int
+	Host string
 }
 
 func Start(params StartParams) {
@@ -81,10 +82,21 @@ func Start(params StartParams) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// Start server
-	e.Logger.Infof("Starting server on port %d", params.Port)
 	go func() {
-		if err := e.Start(":" + strconv.Itoa(params.Port)); err != nil && err != http.ErrServerClosed {
+		port := viper.GetInt("SERVER_PORT")
+		host := viper.GetString("SERVER_HOST")
+		// Start server
+		if len(host) == 0 {
+			host = params.Host
+		}
+
+		if port == 0 {
+			port = params.Port
+		}
+
+		address := fmt.Sprintf("%s:%d", host, port)
+		e.Logger.Infof("Starting server on %s", address)
+		if err := e.Start(address); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()

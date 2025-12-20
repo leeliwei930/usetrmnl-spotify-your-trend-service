@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.nuxt/
+.output/
+dist/
+
+# Environment files
+.env
+.env.*
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+README.md
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dockerfile
+Dockerfile
+.dockerignore
+
+# Lock files are needed
+!pnpm-lock.yaml
