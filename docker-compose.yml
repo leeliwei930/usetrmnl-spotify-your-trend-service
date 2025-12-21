@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
     container_name: usetrmnl-agents
     ports:
-      - "8000:8000"
+      - "9301:8000"
     env_file:
       - .env.agents
     networks:
@@ -42,7 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: usetrmnl-backend
     ports:
-      - "8009:8080"
+      - "9300:8080"
     env_file:
       - .env.backend
     depends_on:
@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     container_name: usetrmnl-frontend
     ports:
-      - "3000:3000"
+      - "9302:3000"
     env_file:
       - .env.frontend
     depends_on:
