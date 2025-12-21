@@ -73,6 +73,25 @@ func Start(params StartParams) {
 		AllowCredentials: true,
 	}))
 
+	// Security headers middleware
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// Content Security Policy
+			c.Response().Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'")
+			// Prevent MIME sniffing
+			c.Response().Header().Set("X-Content-Type-Options", "nosniff")
+			// Prevent clickjacking
+			c.Response().Header().Set("X-Frame-Options", "DENY")
+			// Enable XSS protection
+			c.Response().Header().Set("X-XSS-Protection", "1; mode=block")
+			// Enforce HTTPS (in production, adjust max-age as needed)
+			c.Response().Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+			// Control referrer information
+			c.Response().Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+			return next(c)
+		}
+	})
+
 	apiGroup := e.Group("/api")
 	routes.RegisterApiRoutes(apiGroup)
 

@@ -37,6 +37,10 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /build/usetrmnl-spotify-service .
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
+
 # Copy views and public directories (needed for HTML templates and static files)
 COPY --from=builder /build/views ./views
 COPY --from=builder /build/public ./public
@@ -44,6 +48,6 @@ COPY --from=builder /build/public ./public
 # Expose port
 EXPOSE 8009
 
-# Run the application with serve command
-ENTRYPOINT ["./usetrmnl-spotify-service"]
+# Use entrypoint script that generates service token and starts server
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["start" , "-H", "0.0.0.0", "-p", "8009"]

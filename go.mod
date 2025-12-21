@@ -3,6 +3,7 @@ module github.com/leeliwei930/usetrmnl_spotify_service
 go 1.25.3
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.14.0
 	github.com/labstack/gommon v0.4.2

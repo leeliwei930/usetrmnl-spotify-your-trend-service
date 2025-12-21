@@ -27,6 +27,9 @@ type Config struct {
 	AgentClientTimeout  int
 	AgentRequestTimeout int
 	ServerTimeout       int
+
+	// Security Configuration
+	JWTSecret string
 }
 
 var instance *Config
@@ -65,6 +68,8 @@ func Init() error {
 		AgentClientTimeout:  viper.GetInt("AGENT_CLIENT_TIMEOUT"),
 		AgentRequestTimeout: viper.GetInt("AGENT_REQUEST_TIMEOUT"),
 		ServerTimeout:       viper.GetInt("SERVER_TIMEOUT"),
+		// Security configuration
+		JWTSecret: viper.GetString("JWT_SECRET"),
 	}
 
 	// Validate required configuration
