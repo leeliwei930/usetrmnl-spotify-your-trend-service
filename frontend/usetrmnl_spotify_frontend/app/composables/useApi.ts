@@ -1,19 +1,28 @@
-export const useApi = () => {
+import { useQuery, useMutation } from '@tanstack/vue-query'
+
+// Query for getting Spotify auth URL
+export const useSpotifyAuthUrl = () => {
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBase
 
-  const getSpotifyAuthUrl = async () => {
-    try {
+  return useQuery({
+    queryKey: ['spotify', 'authUrl'],
+    queryFn: async () => {
       const response = await $fetch<{ authUrl: string }>(`${apiBase}/usetrmnl/spotify/authorize`)
       return response
-    } catch (error) {
-      console.error('Failed to fetch auth URL:', error)
-      throw error
-    }
-  }
+    },
+    staleTime: 1000 * 60 * 5, // Consider the auth URL fresh for 5 minutes
+    retry: 2
+  })
+}
 
-  const exchangeSpotifyCode = async (code: string, state?: string) => {
-    try {
+// Mutation for exchanging Spotify code
+export const useExchangeSpotifyCode = () => {
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase
+
+  return useMutation({
+    mutationFn: async (params: { code: string; state?: string }) => {
       const response = await $fetch<{
         success: boolean
         refreshToken?: string
@@ -22,17 +31,9 @@ export const useApi = () => {
         error?: string
       }>(`${apiBase}/usetrmnl/spotify/callback`, {
         method: 'POST',
-        body: { code, state }
+        body: { code: params.code, state: params.state }
       })
       return response
-    } catch (error) {
-      console.error('Failed to exchange code:', error)
-      throw error
     }
-  }
-
-  return {
-    getSpotifyAuthUrl,
-    exchangeSpotifyCode
-  }
+  })
 }

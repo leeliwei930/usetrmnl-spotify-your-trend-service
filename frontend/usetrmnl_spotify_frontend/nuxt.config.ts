@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   ssr: false,
   modules: ['@nuxt/eslint', '@nuxt/test-utils', 'shadcn-nuxt'],
   css: ['~/assets/css/tailwind.css'],
+  plugins: ['~/plugins/vue-query.ts'],
   vite: {
     plugins: [
       tailwindcss(),
@@ -14,7 +15,7 @@ export default defineNuxtConfig({
   },
   shadcn: {
     prefix: '',
-    componentDir: './components/shadcn'
+    componentDir: '~/components/ui'
   },
   runtimeConfig: {
     public: {
