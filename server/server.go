@@ -46,6 +46,9 @@ func Start(params StartParams) {
 	e.Logger.SetLevel(log.INFO)
 	e.Use(middleware.Recover())
 
+	// Configure IP extraction for proxy support
+	e.IPExtractor = echo.ExtractIPFromXFFHeader()
+
 	// CORS middleware for NuxtJS frontend
 	// Read allowed origins from environment variable (comma-separated)
 	allowOriginsStr := viper.GetString("CORS_ALLOW_ORIGINS")
@@ -58,9 +61,13 @@ func Start(params StartParams) {
 		allowOrigins[i] = strings.TrimSpace(allowOrigins[i])
 	}
 	e.Static("/", "./public")
+
+	// Proxy middleware - must come before CORS when running behind a proxy
+	// This ensures X-Forwarded-* headers are properly handled
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowOrigins,
-		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS, echo.PATCH},
 		AllowHeaders: []string{
 			echo.HeaderOrigin,
 			echo.HeaderContentType,
@@ -69,8 +76,20 @@ func Start(params StartParams) {
 			"X-SPOTIFY-CLIENT-ID",
 			"X-SPOTIFY-CLIENT-SECRET",
 			"X-SPOTIFY-REFRESH-TOKEN",
+			// Headers that might be added by proxy
+			"X-Forwarded-For",
+			"X-Forwarded-Proto",
+			"X-Forwarded-Host",
+			"X-Real-IP",
+		},
+		ExposeHeaders: []string{
+			echo.HeaderContentType,
+			echo.HeaderContentLength,
+			echo.HeaderAcceptEncoding,
+			"X-Request-ID",
 		},
 		AllowCredentials: true,
+		MaxAge:           3600, // Cache preflight requests for 1 hour
 	}))
 
 	// Security headers middleware
