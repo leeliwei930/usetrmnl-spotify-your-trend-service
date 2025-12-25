@@ -19,7 +19,7 @@ def register_log_filter() -> None:
             return (
                 record.args  # type: ignore
                 and len(record.args) >= 3
-                and record.args[2] not in ["/_/health", "/_/ready"]  # type: ignore
+                and record.args[2] not in [ "/health", "/_/health", "/_/ready"]  # type: ignore
             )
 
     logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
