@@ -38,12 +38,24 @@ class LyricSummary(BaseModel):
 
 
 def invoke_agent(searchInput: LyricsSearchInput):
+	# Sanitize inputs for cache key to ensure consistency
+	clean_title = searchInput.title.strip().replace(' ', '')
+	clean_artist = searchInput.artist.strip().replace(' ', '')
+	clean_album = searchInput.album.strip().replace(' ', '')
+	
+	cache_key = f"lyrics_prompt_cache_{clean_title}_{clean_artist}_{clean_album}"
+
 	model = OpenAIModel(
 		model_id="openai/gpt-4.1:online",
 		client_args={
 			"base_url": "https://openrouter.ai/api/v1",
 			"api_key": os.getenv("OPENROUTER_API_KEY"),
 			"timeout": LLM_TIMEOUT,
+		},
+		params={
+			"prompt_cache_key": cache_key,
+			"prompt_cache_retention": "24h",
+			"reasoning_effort": "low",
 		}
 	)
 
