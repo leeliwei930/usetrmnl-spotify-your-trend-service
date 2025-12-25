@@ -54,7 +54,6 @@ def invoke_agent(searchInput: LyricsSearchInput):
 		},
 		params={
 			"prompt_cache_key": cache_key,
-			"prompt_cache_retention": "24h",
 			"reasoning_effort": "low",
 		}
 	)
