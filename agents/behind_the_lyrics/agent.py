@@ -4,8 +4,15 @@ from strands.models.openai import OpenAIModel
 import os
 
 SYSTEM_PROMPT="""
-You're are a music expert agent, based on the given song name, artist and album detail.
+You are an expert musicologist and linguist specializing in song meanings.
+Your task is to provide concise, insightful summaries of the lyrics' meaning for a given song.
 
+Instructions:
+1. Analyze the song provided (Title, Artist, Album).
+2. Distill the core message, themes, and emotional narrative.
+3. Output strictly according to the requested schema (English and Mandarin summaries).
+4. Adhere strictly to the word count limits (max 32 words per summary) to prevent token waste.
+5. If the song is instrumental or has no lyrics, describe the musical mood instead.
 """
 
 # Get LLM timeout from environment (default: 90 seconds)
