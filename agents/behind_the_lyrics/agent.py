@@ -2,6 +2,7 @@ from strands import Agent
 from pydantic import BaseModel, Field
 from strands.models.openai import OpenAIModel
 import os
+from strands.types.exceptions import StructuredOutputException
 
 SYSTEM_PROMPT="""
 You are an expert musicologist and linguist specializing in song meanings.
@@ -18,14 +19,6 @@ Instructions:
 # Get LLM timeout from environment (default: 90 seconds)
 LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "90"))
 
-model = OpenAIModel(
-    model_id="openai/gpt-4.1:online",
-	client_args={
-		"base_url": "https://openrouter.ai/api/v1",
-        "api_key": os.getenv("OPENROUTER_API_KEY"),
-        "timeout": LLM_TIMEOUT,
-    }
-)
 
 class LyricsSearchInput(BaseModel):
 	title: str = Field(description="The song's title")
@@ -42,12 +35,22 @@ class LyricSummary(BaseModel):
 	summary_zh: str = Field(description="A summarised version of the song's lyrics meaning in mandarin, in 32 words")
 
 
-behind_the_lyrics_agent = Agent(
-    model=model,
-    system_prompt=SYSTEM_PROMPT,
-)
+
 
 def invoke_agent(searchInput: LyricsSearchInput):
+	model = OpenAIModel(
+		model_id="openai/gpt-4.1:online",
+		client_args={
+			"base_url": "https://openrouter.ai/api/v1",
+			"api_key": os.getenv("OPENROUTER_API_KEY"),
+			"timeout": LLM_TIMEOUT,
+		}
+	)
+
+	behind_the_lyrics_agent = Agent(
+		model=model,
+		system_prompt=SYSTEM_PROMPT,
+	)
 	response = behind_the_lyrics_agent(
 		searchInput.model_dump_json(),
 		structured_output_model=LyricSummary,
