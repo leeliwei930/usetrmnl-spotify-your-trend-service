@@ -67,4 +67,4 @@ services:
 # ========================================
 networks:
   usetrmnl-network:
-    driver: bridge
+    external: true
